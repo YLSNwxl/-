@@ -1,0 +1,195 @@
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
+public class Group_fans extends JFrame{
+
+	private static final long serialVersionUID = 1L;
+	private JButton Allbutton0;
+	private JButton Allbutton1;
+
+	public Group_fans() {             //将下面的风扇类创建三个对象分别放到框架里
+		this.setLayout(null);
+		this.setTitle("旋转风扇");
+		this.setSize(1200, 500);
+		
+		Fan fan0=new Fan();         //第一个
+		fan0.setSize(400, 400);
+		fan0.setLayout(null);
+		this.add(fan0);
+	
+		Fan fan1=new Fan();             //第二个
+		fan1.setSize(400, 400);
+		fan1.setLayout(null);
+		fan1.setLocation(400, 0);
+		this.add(fan1);
+		
+		Fan fan2=new Fan();             //第三个
+		fan2.setSize(400, 400);
+		fan2.setLayout(null);
+		fan2.setLocation(800, 0);
+		this.add(fan2);
+		
+		Allbutton0=new JButton("All Start");
+		Allbutton0.setBounds(400, 400, 150, 30);
+		this.add(Allbutton0);
+		Allbutton0.addActionListener(new ActionListener() {     //按下该按钮，三个风扇对象分别创建线程运动
+			public void actionPerformed(ActionEvent e) {
+           fan0.Start();  //自定义函数
+           fan1.Start();
+           fan2.Start();
+			}
+		});
+		Allbutton1=new JButton("All Stop");
+		Allbutton1.setBounds(600, 400, 150, 30);
+		this.add(Allbutton1);
+		Allbutton1.addActionListener(new ActionListener() {  //按下该按钮，三个风扇中止各自的线程停止运动
+			public void actionPerformed(ActionEvent e) {
+			fan0.Stop(); //自定义函数
+			fan1.Stop();
+			fan2.Stop();
+			}
+		});
+	}
+	public static void main(String[] args) {
+		Group_fans group=new Group_fans();
+		
+		group.setVisible(true);
+		group.setDefaultCloseOperation(EXIT_ON_CLOSE);
+	}
+	
+}
+class Fan extends JPanel{        //风扇类
+    private JSlider bar;
+	private JButton Start;
+	private JButton Stop;
+	private JButton Reverse;
+	private double m=0;
+	private double n=0;
+	private int flag=0;
+	private int flag12=0;
+	private int flag0=0;
+	private Thread haha;
+	private long time=250;
+	public Fan() {
+		Start=new JButton("Start");
+		Start.setBounds(50, 20, 100, 35);
+		this.add(Start);
+		Start.addActionListener(new ActionListener() {      // 按下该按钮，创建一个线程,不管什么时候都是逆时针运动
+			@SuppressWarnings("deprecation")
+			public void actionPerformed(ActionEvent e) {
+				if(flag==1)
+				haha.stop();
+				haha=new Thread(new Left());
+				flag=1;  flag12=0;
+				haha.start();
+			}
+		});
+		Stop=new JButton("Stop");
+		Stop.setBounds(160, 20, 100, 35);
+		this.add(Stop);
+		Stop.addActionListener(new ActionListener() {    //按下该按钮，停止线程
+			@SuppressWarnings("deprecation")
+			public void actionPerformed(ActionEvent e) {
+				flag=0;
+				haha.stop();
+			}
+		});
+		Reverse=new JButton("Reverse");
+		Reverse.setBounds(270, 20, 100, 35);
+	    this.add(Reverse);
+	    Reverse.addActionListener(new ActionListener() {//按下该按钮，创建一个线程，风扇往反向转
+			@SuppressWarnings("deprecation")
+			public void actionPerformed(ActionEvent e) {
+				if(flag==1)
+					haha.stop();
+				if(flag12==0) {
+					flag0=0;  haha=new Thread(new Right());
+				}
+				if(flag12==1) {
+					flag0++;
+					if(flag0%2!=0)haha=new Thread(new Left());
+					else haha=new Thread(new Right());
+				}
+				flag12=1;
+				flag=1;
+				haha.start();
+			}
+		});
+	    bar=new JSlider(0,100,50);
+	    bar.setBounds(100, 370, 200, 10);
+	    this.add(bar);
+	   bar.addChangeListener(new ChangeListener() {           //滑动条的值做相应处理后用作线程停顿时间控制
+		public void stateChanged(ChangeEvent e) {
+			time=(100-bar.getValue())*5;
+		}
+		   
+	   });
+	}
+	@SuppressWarnings("deprecation")
+	public void Stop() {        //对外暴露的线程停止方法
+		flag=0;
+		haha.stop();
+	}
+	@SuppressWarnings("deprecation")
+	public void Start() {             //对外暴露的线程开始方法
+		if(flag==1)
+			haha.stop();
+			haha=new Thread(new Left());
+			flag=1;
+			haha.start();
+	}
+	class Left implements Runnable{     //逆时针旋转线程
+		public void run() {
+			for(int i=0;i<50000;i++) {
+				m+=30;n=m;
+				repaint();
+				try {
+					Thread.sleep(time);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	class Right implements Runnable{   //顺时针旋转线程
+		
+		public void run() {
+			for(int i=0;i<50000;i++) {
+				m-=30;
+				n=m;
+			repaint();
+				try {
+					Thread.sleep(time);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	public void paintComponent(Graphics g) {    //线程中重新绘制的图形
+		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D)g;
+			g2.setColor(Color.RED); 
+			Arc2D arc0=new Arc2D.Double(75,75,250,250,n,30,Arc2D.PIE);
+			Arc2D arc1=new Arc2D.Double(75,75,250,250,n+90,30,Arc2D.PIE);
+			Arc2D arc2=new Arc2D.Double(75,75,250,250,n+180,30,Arc2D.PIE);
+			Arc2D arc3=new Arc2D.Double(75,75,250,250,n+270,30,Arc2D.PIE);
+			Ellipse2D arc4=new Ellipse2D.Double(70, 70, 260, 260);
+			g2.draw(arc0);
+			g2.fill(arc0);
+			g2.draw(arc1);
+			g2.fill(arc1);
+			g2.draw(arc2);
+			g2.fill(arc2);
+			g2.draw(arc3);
+			g2.fill(arc3);
+			g2.draw(arc4);
+			
+		}
+}
