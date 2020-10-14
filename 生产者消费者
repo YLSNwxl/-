@@ -1,0 +1,77 @@
+import java.util.*;
+public class Comsumer_Producer {
+     public static void main(String[] args) {
+    	 String[] strArr=new String[100];
+    	 int n;
+    		Scanner in0=new Scanner(System.in);
+    		Scanner in1=new Scanner(System.in);
+    		System.out.println("请输入您需要生产者读入仓库的字符串数组个数：");
+    		n=in0.nextInt();
+    		System.out.println("请输入您需要读入的字符串数组（例如：abc 1sc 123）：");
+    		for(int i=0;i<n;i++) {
+    			strArr[i]=in1.next();
+    		}
+    	new	Thread(new Producer(strArr)).start();
+    	new Thread(new Comsumer()).start();
+    		in0.close();in1.close();
+     }
+}
+class Variety{
+	public static Queue<String> q=new LinkedList<String>();
+	public static boolean flag=false;
+	public static Object Status=new Object();
+	public static int len=0;
+}
+class Comsumer implements Runnable{
+	private StringBuffer str=new StringBuffer();
+	private int i=0;
+	private int len;
+	public void run() {
+		while(i<Variety.len) {
+		synchronized(Variety.Status) {
+			while(!Variety.flag) {
+				try {Variety.Status.wait();}
+				catch(InterruptedException e){e.printStackTrace();}
+			}
+			if(Variety.q.peek()!=null) {
+				i++;
+		    str.append(Variety.q.poll()).reverse();
+			System.out.println("消费者取出第"+i+"个字符串倒置后得到"+str);
+			len=str.length();
+			str.delete(0, len);
+			}
+			Variety.Status.notify();
+		}
+	  }
+	}
+}
+class Producer implements Runnable{
+	private String[] strarr=new String[100];
+	private int f;
+	private int j;
+	public Producer(String[] strArr) {
+		for(j=0;strArr[j]!=null;j++)
+		this.strarr[j]=strArr[j];
+	}
+	public void run() {
+		Variety.len=j;
+		int flag0=0;
+		while(flag0<j) { 
+			synchronized(Variety.Status) {				
+				Variety.flag=false;
+			  try {   
+				  f=flag0+1;
+				  System.out.println("生产者读入第"+f+"个字符串"+strarr[flag0]);
+				  Variety.q.offer(strarr[flag0]); 
+				  Thread.sleep(1000);
+				  if(flag0==j-1) {Variety.flag=true;flag0++;Variety.Status.wait();}
+			      if(flag0<j-1)
+		           System.out.println("等待1000ms后......");
+			 
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}flag0++; 
+		 }
+	}
+	}
+}
